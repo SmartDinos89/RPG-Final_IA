@@ -1,72 +1,65 @@
-﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
-// Ensure the component is present on the gameobject the script is attached to
-[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
-    Rigidbody2D body;
+    public float speed;
+    public LayerMask solidObjectsLayer;
 
-    float horizontal;
-    float vertical;
+    private bool isMoving;
+    private Vector2 input;
+    private Animator animator;
 
-    public float runSpeed = 20.0f;
-
-    Animator animator;
-    string currentState;
-    const string PLAYER_IDLE = "Idle";
-    const string PLAYER_WALK_LEFT = "WLeft";
-    const string PLAYER_WALK_RIGHT = "WRight";
-    const string PLAYER_WALK_UP = "WUp";
-    const string PLAYER_WALK_DOWN = "WDown";
-
-
-    void Start()
+    private void Awake()
     {
-        body = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
     }
 
-    void Update()
+    private void Update()
     {
-        // Gives a value between -1 and 1
-        horizontal = Input.GetAxisRaw("Horizontal"); // -1 is left
-        vertical = Input.GetAxisRaw("Vertical"); // -1 is down
+        if (!isMoving)
+        {
+            input.x = Input.GetAxisRaw("Horizontal");
+            input.y = Input.GetAxisRaw("Vertical");
+
+            //remove diag movement
+            if (input.x != 0) input.y = 0;
+
+            if (input != Vector2.zero)
+            {
+                animator.SetFloat("moveX", input.x);
+                animator.SetFloat("moveY", input.y);
+
+                var targetPos = transform.position;
+                targetPos.x += input.x;
+                targetPos.y += input.y;
+
+                if (isWalkable(new Vector3(targetPos.x, targetPos.y - 0.5f)))
+                    StartCoroutine(Move(targetPos));
+            }
+        }
+        animator.SetBool("isMoving", isMoving);
     }
 
-    void FixedUpdate()
+    IEnumerator Move(Vector3 targetPos)
     {
-        body.velocity = new Vector2(horizontal * runSpeed, vertical * runSpeed).normalized;
-
-        if(body.velocity == Vector2.zero)
+        isMoving = true;
+        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
-            ChangeAnimationState(PLAYER_IDLE);
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
+            yield return null;
         }
-        if(horizontal > 0)
-        {
-            ChangeAnimationState(PLAYER_WALK_RIGHT);
-        }
-        if (horizontal < 0)
-        {
-            ChangeAnimationState(PLAYER_WALK_LEFT);
-        }
-        if (vertical > 0 && horizontal == 0)
-        {
-            ChangeAnimationState(PLAYER_WALK_UP);
-        }
-        if (vertical < 0 && horizontal == 0)
-        {
-            ChangeAnimationState(PLAYER_WALK_DOWN);
-        }
+        transform.position = targetPos;
+        isMoving = false;
     }
 
-    void ChangeAnimationState(string newState) {
-
-        if (currentState == newState) return;
-
-        animator.Play(newState);
-
-        currentState = newState;
-
+    private bool isWalkable(Vector3 targetPos)
+    {
+        if(Physics2D.OverlapCircle(targetPos, .2f, solidObjectsLayer) != null)
+        {
+            return false;
+        }
+        return true;
     }
-
 }
