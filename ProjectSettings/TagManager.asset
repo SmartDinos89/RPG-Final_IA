@@ -3,18 +3,21 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Shadow
+  - Collide
+  - CinemachineTarget
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - SolidObjects
+  - 
   - Water
   - UI
   - 
   - 
-  - 
-  - 
+  - TempCast
+  - Walkable
   - 
   - 
   - 
@@ -41,12 +44,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Bg
-    uniqueID: 835679667
-    locked: 0
-  - name: Foreground
-    uniqueID: 2568846767
+  - name: Ground
+    uniqueID: 1353936555
     locked: 0
   - name: Player
-    uniqueID: 1423018283
+    uniqueID: 909997611
     locked: 0

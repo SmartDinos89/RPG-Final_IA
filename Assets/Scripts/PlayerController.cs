@@ -4,62 +4,33 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed;
-    public LayerMask solidObjectsLayer;
+    Rigidbody2D body;
 
-    private bool isMoving;
-    private Vector2 input;
-    private Animator animator;
+    float horizontal;
+    float vertical;
 
-    private void Awake()
+    Vector2 move;
+
+    public float runSpeed = 20.0f;
+
+    void Start()
     {
-        animator = GetComponent<Animator>();
+        body = GetComponent<Rigidbody2D>();
     }
 
-    private void Update()
+    void Update()
     {
-        if (!isMoving)
-        {
-            input.x = Input.GetAxisRaw("Horizontal");
-            input.y = Input.GetAxisRaw("Vertical");
+        // Gives a value between -1 and 1
+        horizontal = Input.GetAxisRaw("Horizontal"); // -1 is left
+        vertical = Input.GetAxisRaw("Vertical"); // -1 is down
 
-            //remove diag movement
-            if (input.x != 0) input.y = 0;
+        if (horizontal != 0) vertical = 0;
 
-            if (input != Vector2.zero)
-            {
-                animator.SetFloat("moveX", input.x);
-                animator.SetFloat("moveY", input.y);
-
-                var targetPos = transform.position;
-                targetPos.x += input.x;
-                targetPos.y += input.y;
-
-                if (isWalkable(new Vector3(targetPos.x, targetPos.y - 0.5f)))
-                    StartCoroutine(Move(targetPos));
-            }
-        }
-        animator.SetBool("isMoving", isMoving);
+        move = new Vector2(horizontal, vertical).normalized;
     }
 
-    IEnumerator Move(Vector3 targetPos)
+    void FixedUpdate()
     {
-        isMoving = true;
-        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
-            yield return null;
-        }
-        transform.position = targetPos;
-        isMoving = false;
-    }
-
-    private bool isWalkable(Vector3 targetPos)
-    {
-        if(Physics2D.OverlapCircle(targetPos, .2f, solidObjectsLayer) != null)
-        {
-            return false;
-        }
-        return true;
+        body.velocity = move * runSpeed;
     }
 }
